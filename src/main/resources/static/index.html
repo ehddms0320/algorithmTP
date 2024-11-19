@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Travel Recommendation Service</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Include Google Maps JavaScript API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQ62izot9EIhYfDd-3kkKD5_OH-kEuzzc"></script>
+</head>
+<body>
+
+    <!-- Country Selection -->
+    <div class="selection-panel">
+        <h2>Select Your Destination</h2>
+        <select id="countrySelect">
+            <option value="southKorea">South Korea</option>
+            <option value="japan">Japan</option>
+            <option value="vietnam">Vietnam</option>
+        </select>
+
+        <!-- Tag Selection -->
+        <h3>Select Tags (2-5)</h3>
+        <div id="tagSelection">
+            <!-- Tags will be populated dynamically -->
+        </div>
+        <button id="submitBtn">Find Landmarks</button>
+    </div>
+
+    <!-- Map Display -->
+    <div id="map"></div>
+
+    <!-- Landmark Information -->
+    <div id="landmarkInfo">
+        <h2>Landmark Details</h2>
+        <!-- Details will be populated dynamically -->
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
