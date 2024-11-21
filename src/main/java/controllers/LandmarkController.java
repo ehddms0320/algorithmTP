@@ -1,5 +1,4 @@
-package main.java.com
-.controllers;
+package com.travelrecommendation.controllers;
 
 import com.travelrecommendation.models.Landmark;
 import com.travelrecommendation.services.RouteService;
