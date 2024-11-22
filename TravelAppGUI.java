@@ -2,13 +2,12 @@ package al;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.*;
-import java.util.*;
+
 
 public class TravelAppGUI extends JFrame {
 
