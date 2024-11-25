@@ -1,0 +1,17 @@
+TravelRecommendationService/
+├── server/
+│   ├── Main.java
+│   ├── controllers/
+│   │   └── LandmarkController.java
+│   ├── models/
+│   │   ├── Country.java
+│   │   └── Landmark.java
+│   ├── services/
+│   │   ├── DistanceService.java
+│   │   └── RouteService.java
+│   └── utils/
+│       └── ApiClient.java
+├── client/
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js

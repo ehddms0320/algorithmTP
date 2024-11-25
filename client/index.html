@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Recommendation</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQ62izot9EIhYfDd-3kkKD5_OH-kEuzzc"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🌏 Travel Recommendation Service</h1>
+        
+        <div class="search-section">
+            <div class="country-selector">
+                <h2>Select Country</h2>
+                <select id="countrySelect">
+                    <option value="">Select a country</option>
+                </select>
+            </div>
+
+            <div class="tag-selector">
+                <h2>Select Tags (2-5)</h2>
+                <div id="tagContainer" class="tag-container">
+                    <!-- Tags will be dynamically populated -->
+                </div>
+            </div>
+
+            <button id="searchButton" class="search-button">Search Landmarks</button>
+        </div>
+
+        <div class="results-section">
+            <div id="map" class="map-container"></div>
+            <div id="landmarks" class="landmarks-container">
+                <!-- Landmarks will be dynamically populated -->
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
