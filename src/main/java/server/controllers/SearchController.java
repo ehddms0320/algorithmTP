@@ -27,8 +27,10 @@ public class SearchController implements HttpHandler {
 
         try {
             // 요청 본문 읽기
-            String requestBody = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))
-                    .lines().collect(Collectors.joining("\n"));
+            String requestBody;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))) {
+                requestBody = reader.lines().collect(Collectors.joining("\n"));
+            }
 
             // TODO: JSON 파싱 로직 구현
             String country = ""; // requestBody에서 추출
