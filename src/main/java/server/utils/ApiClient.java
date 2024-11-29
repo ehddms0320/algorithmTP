@@ -3,15 +3,17 @@ package server.utils;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 
 public class ApiClient {
     
-    public static String sendGetRequest(String urlStr) throws IOException {
-        URL url = new URL(urlStr);
+    public static String sendGetRequest(String urlStr) throws IOException, URISyntaxException {
+        URL url = new URI(urlStr).toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         
         try {
@@ -41,7 +43,7 @@ public class ApiClient {
     
     public static String encodeValue(String value) {
         try {
-            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+            return URLEncoder.encode(value, StandardCharsets.UTF_8);
         } catch (Exception e) {
             return value;
         }
