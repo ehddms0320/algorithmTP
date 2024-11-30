@@ -4,7 +4,12 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import server.data.TravelData;
 import server.models.Landmark;
-import server.models.Airport;
+import server.constants.TravelTags;
+import server.services.LandmarkService;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,69 +17,88 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.nio.charset.StandardCharsets;
 
 public class SearchController implements HttpHandler {
+    private final Gson gson;
+    private final LandmarkService landmarkService;
+
+    public SearchController() {
+        this.gson = new Gson();
+        this.landmarkService = new LandmarkService();
+    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        if (!"POST".equals(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(405, -1); // Method Not Allowed
-            return;
+        if ("POST".equals(exchange.getRequestMethod())) {
+            handleSearchRequest(exchange);
+        } else if ("OPTIONS".equals(exchange.getRequestMethod())) {
+            handleOptionsRequest(exchange);
+        } else {
+            sendResponse(exchange, 405, "Method not allowed");
         }
+    }
 
+    private void handleSearchRequest(HttpExchange exchange) throws IOException {
         try {
             // 요청 본문 읽기
-            String requestBody;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))) {
-                requestBody = reader.lines().collect(Collectors.joining("\n"));
+            String requestBody = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))
+                .lines()
+                .collect(Collectors.joining("\n"));
+
+            // JSON 파싱
+            JsonObject jsonRequest = gson.fromJson(requestBody, JsonObject.class);
+            
+            // country 추출
+            String country = jsonRequest.has("country") ? jsonRequest.get("country").getAsString() : "";
+            
+            // tags 추출
+            List<TravelTags> selectedTags = new ArrayList<>();
+            if (jsonRequest.has("tags") && !jsonRequest.get("tags").isJsonNull()) {
+                JsonArray tagsArray = jsonRequest.getAsJsonArray("tags");
+                tagsArray.forEach(tagElement -> {
+                    try {
+                        selectedTags.add(TravelTags.valueOf(tagElement.getAsString()));
+                    } catch (IllegalArgumentException e) {
+                        // 잘못된 태그는 무시
+                    }
+                });
             }
 
-            // TODO: JSON 파싱 로직 구현
-            String country = ""; // requestBody에서 추출
-            List<String> selectedTags = new ArrayList<>(); // requestBody에서 추출
-
-            // 선택된 국가의 랜드마크 가져오기
-            List<Landmark> allLandmarks = TravelData.getLandmarks(country);
-            
-            // 선택된 태그에 맞는 랜드마크 필터링
-            List<Landmark> filteredLandmarks = allLandmarks.stream()
-                    .filter(landmark -> {
-                        List<String> landmarkTags = Arrays.asList(landmark.getTags());
-                        return selectedTags.stream()
-                                .anyMatch(landmarkTags::contains);
-                    })
-                    .collect(Collectors.toList());
+            // 검색 실행
+            List<Landmark> results = searchLandmarks(country, selectedTags);
 
             // 응답 생성
-            StringBuilder json = new StringBuilder("[");
-            for (Landmark landmark : filteredLandmarks) {
-                json.append(landmark.toJson()).append(",");
-            }
-            if (!filteredLandmarks.isEmpty()) {
-                json.deleteCharAt(json.length() - 1);
-            }
-            json.append("]");
-
-            // 응답 전송
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-            byte[] responseBytes = json.toString().getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, responseBytes.length);
+            String response = gson.toJson(results);
             
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(responseBytes);
-            }
+            // 응답 전송
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            sendResponse(exchange, 200, response);
 
         } catch (Exception e) {
-            String response = "{\"error\": \"" + e.getMessage() + "\"}";
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(500, response.getBytes().length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            }
+            e.printStackTrace();
+            sendResponse(exchange, 400, "{\"error\": \"Invalid request format\"}");
+        }
+    }
+
+    private List<Landmark> searchLandmarks(String country, List<TravelTags> tags) {
+        return landmarkService.searchLandmarks(country, tags);
+    }
+
+    private void handleOptionsRequest(HttpExchange exchange) throws IOException {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+        sendResponse(exchange, 204, "");
+    }
+
+    private void sendResponse(HttpExchange exchange, int statusCode, String response) throws IOException {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(statusCode, responseBytes.length);
+        
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(responseBytes);
         }
     }
 }

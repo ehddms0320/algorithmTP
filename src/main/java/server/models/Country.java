@@ -1,6 +1,7 @@
 package server.models;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Country {
     private String name;
@@ -17,5 +18,10 @@ public class Country {
 
     public List<Landmark> getLandmarks() {
         return landmarks;
+    }
+
+    public void logLandmarkNames() {
+        System.out.println("Landmarks in " + name + ": " + 
+            landmarks.stream().map(Landmark::getName).collect(Collectors.joining(", ")));
     }
 }

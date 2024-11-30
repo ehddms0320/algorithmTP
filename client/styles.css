@@ -10,11 +10,12 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 20px;
 }
 
 h1 {
     text-align: center;
-    color: #333;
+    color: #2c3e50;
     margin-bottom: 30px;
 }
 
@@ -82,9 +83,47 @@ h2 {
 }
 
 .tag-container {
+    margin: 10px 0;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.tag-options {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
+}
+
+.tag-options label {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.tag-options label:hover {
+    background-color: #e9ecef;
+}
+
+.tag-options input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.tag-options input[type="checkbox"]:checked + span {
+    color: #007bff;
+}
+
+.tag-options label:has(input[type="checkbox"]:checked) {
+    background-color: #e7f1ff;
+    border-color: #007bff;
 }
 
 .tag {
@@ -212,7 +251,192 @@ h2 {
     text-align: left;
 }
 
+#route-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 300px;
+    max-height: 80vh;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+#route-header {
+    padding: 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 8px 8px 0 0;
+}
+
+#route-header h3 {
+    margin: 0;
+    color: #343a40;
+    font-size: 1.2rem;
+}
+
+#route-list {
+    padding: 15px;
+}
+
+.route-item {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+}
+
+.route-item:last-child {
+    border-bottom: none;
+}
+
+.route-number {
+    width: 24px;
+    height: 24px;
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-weight: bold;
+}
+
+.route-content {
+    flex: 1;
+}
+
+.route-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.route-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.route-type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+
+.route-type.airport {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.route-type.landmark {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+
+#searchContainer {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.search-group {
+    margin-bottom: 15px;
+}
+
+.search-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #495057;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.error-message {
+    display: none;
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#map {
+    height: 600px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.info-window {
+    padding: 5px;
+}
+
+.info-window h3 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+}
+
+.info-window p {
+    margin: 5px 0;
+    color: #666;
+}
+
 @media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    #map {
+        height: 400px;
+    }
+    
+    .btn-primary {
+        padding: 10px;
+    }
+    
     .results-section {
         grid-template-columns: 1fr;
     }

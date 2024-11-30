@@ -4,37 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Recommendation</title>
-    <link rel="stylesheet" href="/client/styles.css">
+    <link rel="stylesheet" href="styles.css">
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQ62izot9EIhYfDd-3kkKD5_OH-kEuzzc"></script>
+    <style>
+        .tag-container {
+            margin: 10px 0;
+        }
+        
+        #tagSelect {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        #searchButton {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        #searchButton:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌏 Travel Recommendation Service</h1>
+        <h1>🌏 Travel Landmark Search</h1>
+        <div id="landmarks-list"></div>
         
-        <div class="search-section">
-            <div class="country-selector">
-                <h2>Select Country</h2>
-                <select id="countrySelect">
-                    <option value="">Select a country</option>
+        <div id="searchContainer">
+            <div class="search-group">
+                <label for="countrySelect">국가 선택 (필수)</label>
+                <select id="countrySelect" class="form-control" required>
+                    <option value="">국가를 선택하세요</option>
+                    <option value="South Korea">대한민국</option>
+                    <option value="Japan">일본</option>
+                    <option value="Vietnam">베트남</option>
                 </select>
             </div>
 
-            <div class="tag-selector">
-                <h2>Select Tags (2-5)</h2>
-                <div id="tagContainer" class="tag-container">
-                    <!-- Tags will be dynamically populated -->
+            <div class="search-group">
+                <label>태그 선택 (2-5개 선택)</label>
+                <div class="tag-container">
+                    <div class="tag-options">
+                        <label><input type="checkbox" value="역사"> 역사</label>
+                        <label><input type="checkbox" value="문화"> 문화</label>
+                        <label><input type="checkbox" value="자연"> 자연</label>
+                        <label><input type="checkbox" value="현대"> 현대</label>
+                        <label><input type="checkbox" value="쇼핑"> 쇼핑</label>
+                        <label><input type="checkbox" value="음식"> 음식</label>
+                        <label><input type="checkbox" value="전통"> 전통</label>
+                        <label><input type="checkbox" value="종교"> 종교</label>
+                        <label><input type="checkbox" value="예술"> 예술</label>
+                        <label><input type="checkbox" value="교육"> 교육</label>
+                        <label><input type="checkbox" value="계절"> 계절</label>
+                        <label><input type="checkbox" value="휴식"> 휴식</label>
+                        <label><input type="checkbox" value="가족"> 가족</label>
+                        <label><input type="checkbox" value="스포츠"> 스포츠</label>
+                        <label><input type="checkbox" value="엔터테인먼트"> 엔터테인먼트</label>
+                    </div>
                 </div>
             </div>
 
-            <button id="searchButton" class="search-button">Search Landmarks</button>
+            <button id="searchButton" class="btn btn-primary">랜드마크 검색</button>
+            <div id="error" class="error-message"></div>
         </div>
 
-        <div class="results-section">
-            <div id="map" class="map-container"></div>
-            <div id="landmarks" class="landmarks-container">
-                <!-- Landmarks will be dynamically populated -->
-            </div>
-        </div>
+        <div id="landmarkList"></div>
+        <div id="map"></div>
     </div>
     <script src="app.js"></script>
 </body>

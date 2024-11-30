@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import server.data.TravelData;
 import server.models.Landmark;
-import server.models.Airport;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,62 +11,107 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.nio.charset.StandardCharsets;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 public class LandmarkController implements HttpHandler {
 
+    private Gson gson = new GsonBuilder().create();
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        // CORS 설정 추가
-        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
-
-        // OPTIONS 요청 처리
-        if ("OPTIONS".equals(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(200, -1);
-            return;
-        }
-
-        String path = exchange.getRequestURI().getPath();
-        String method = exchange.getRequestMethod();
-
         try {
-            switch (path) {
-                case "/api/countries":
-                    if ("GET".equals(method)) {
-                        handleGetCountries(exchange);
-                    }
-                    break;
-                    
-                case "/api/landmarks":
-                    if ("GET".equals(method)) {
-                        handleGetLandmarks(exchange);
-                    }
-                    break;
-                    
-                case "/api/tags":
-                    if ("GET".equals(method)) {
-                        handleGetTags(exchange);
-                    }
-                    break;
-                    
-                case "/api/search":
-                    if ("POST".equals(method)) {
-                        handleSearchLandmarks(exchange);
-                    }
-                    break;
-                    
-                default:
-                    exchange.sendResponseHeaders(404, -1); // Not Found
+            // CORS 헤더 설정
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+            exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+            
+            if (exchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
+                exchange.sendResponseHeaders(204, -1);
+                return;
             }
-        } catch (Exception e) {
-            String response = "{\"error\": \"" + e.getMessage() + "\"}";
-            exchange.getResponseHeaders().add("Content-Type", "application/json");
-            exchange.sendResponseHeaders(500, response.getBytes().length);
+            
+            if (!exchange.getRequestMethod().equalsIgnoreCase("GET")) {
+                exchange.sendResponseHeaders(405, 0);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write("Method not allowed".getBytes());
+                }
+                return;
+            }
+            
+            String query = exchange.getRequestURI().getQuery();
+            if (query == null || !query.startsWith("country=")) {
+                exchange.sendResponseHeaders(400, 0);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write("Missing country parameter".getBytes());
+                }
+                return;
+            }
+            
+            String countryName = java.net.URLDecoder.decode(query.substring(8), StandardCharsets.UTF_8);
+            String tagsJson = query.contains("&tags=") 
+                ? java.net.URLDecoder.decode(query.substring(query.indexOf("&tags=") + 6), StandardCharsets.UTF_8)
+                : null;
+            
+            final List<String> searchTags = new ArrayList<>();
+            if (tagsJson != null && !tagsJson.isEmpty()) {
+                try {
+                    List<String> parsedTags = new Gson().fromJson(tagsJson, new TypeToken<List<String>>(){}.getType());
+                    searchTags.addAll(parsedTags);
+                } catch (JsonSyntaxException e) {
+                    exchange.sendResponseHeaders(400, 0);
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write("Invalid tags format".getBytes());
+                    }
+                    return;
+                }
+            }
+            
+            if (searchTags.size() < 2 || searchTags.size() > 5) {
+                exchange.sendResponseHeaders(400, 0);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write("Please select 2-5 tags".getBytes());
+                }
+                return;
+            }
+            
+            List<Landmark> landmarks = TravelData.getLandmarks(countryName);
+            
+            // 선택된 태그 중 하나라도 포함하는 랜드마크 필터링
+            if (!searchTags.isEmpty()) {
+                landmarks = landmarks.stream()
+                    .filter(landmark -> {
+                        List<String> landmarkTags = landmark.getTags();
+                        return searchTags.stream().anyMatch(landmarkTags::contains);
+                    })
+                    .collect(Collectors.toList());
+            }
+            
+            // JSON 응답 생성
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonResponse = gson.toJson(landmarks);
+            
+            // Content-Type 헤더 설정
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            
+            // 응답 전송
+            byte[] responseBytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, responseBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
+                os.write(responseBytes);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            exchange.sendResponseHeaders(500, 0);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write("Internal server error".getBytes());
             }
         }
     }
@@ -88,35 +132,39 @@ public class LandmarkController implements HttpHandler {
     }
 
     private void handleGetLandmarks(HttpExchange exchange) throws IOException {
-        String country = exchange.getRequestURI().getQuery();
-        if (country == null || country.isEmpty()) {
-            throw new IOException("Country parameter is required");
+        Map<String, String> queryParams = parseQueryString(exchange.getRequestURI().getQuery());
+        String country = queryParams.get("country");
+        
+        List<Landmark> landmarks;
+        if (country != null && !country.isEmpty()) {
+            landmarks = TravelData.getLandmarks(country);
+        } else {
+            landmarks = new ArrayList<>();
+            for (String c : java.util.Arrays.asList("Korea", "Japan", "Vietnam")) {
+                landmarks.addAll(TravelData.getLandmarks(c));
+            }
         }
         
-        String countryName = country.split("=")[1];
-        List<Landmark> landmarks = TravelData.getLandmarks(countryName);
-        
-        if (landmarks == null) {
-            throw new IOException("Country not found: " + countryName);
+        String response = new Gson().toJson(landmarks);
+        sendJsonResponse(exchange, response);
+    }
+
+    private Map<String, String> parseQueryString(String query) {
+        Map<String, String> result = new HashMap<>();
+        if (query != null) {
+            for (String param : query.split("&")) {
+                String[] entry = param.split("=");
+                if (entry.length > 1) {
+                    result.put(entry[0], entry[1]);
+                } else {
+                    result.put(entry[0], "");
+                }
+            }
         }
-        
-        StringBuilder json = new StringBuilder("[");
-        for (Landmark landmark : landmarks) {
-            json.append(landmark.toJson()).append(",");
-        }
-        if (!landmarks.isEmpty()) {
-            json.deleteCharAt(json.length() - 1);
-        }
-        json.append("]");
-        
-        sendJsonResponse(exchange, json.toString());
+        return result;
     }
 
     private void handleSearchLandmarks(HttpExchange exchange) throws IOException {
-        // 요청 본문에서 검색 매개변수 읽기
-        String requestBody = new BufferedReader(new InputStreamReader(exchange.getRequestBody()))
-                .lines().collect(Collectors.joining("\n"));
-        
         // TODO: JSON 파싱하여 country와 tags 추출
         // 임시 응답
         String response = "{\"message\": \"Search functionality will be implemented\"}";
@@ -143,6 +191,15 @@ public class LandmarkController implements HttpHandler {
         exchange.getResponseHeaders().add("Content-Type", "application/json");
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, response.getBytes(StandardCharsets.UTF_8).length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    private void sendErrorResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
+        String response = String.format("{\"error\": \"%s\"}", message);
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.sendResponseHeaders(statusCode, response.getBytes(StandardCharsets.UTF_8).length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(response.getBytes(StandardCharsets.UTF_8));
         }

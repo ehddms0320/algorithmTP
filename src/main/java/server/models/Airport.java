@@ -1,44 +1,51 @@
 package server.models;
 
 public class Airport {
+    private String code;
     private String name;
     private String country;
     private double latitude;
     private double longitude;
-    private String code;  // IATA 공항 코드
 
-    public Airport(String name, String country, double latitude, double longitude, String code) {
+    public Airport(String code, String name, String country, double latitude, double longitude) {
+        this.code = code;
         this.name = name;
         this.country = country;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.code = code;
     }
 
-    public String getName() {
-        return name;
+    // Getters
+    public String getCode() { return code; }
+    public String getName() { return name; }
+    public String getCountry() { return country; }
+    public double getLatitude() { return latitude; }
+    public double getLongitude() { return longitude; }
+
+    public double calculateDistance(Landmark landmark) {
+        return haversineDistance(this.latitude, this.longitude, landmark.getLatitude(), landmark.getLongitude());
     }
 
-    public String getCountry() {
-        return country;
+    private double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // 지구의 반지름 (km)
+        
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        
+        return R * c;
     }
 
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String toJson() {
+    @Override
+    public String toString() {
         return String.format(
-            "{\"name\":\"%s\", \"country\":\"%s\", \"code\":\"%s\", \"latitude\":%f, \"longitude\":%f}",
-            name, country, code, latitude, longitude
+            "{\"code\":\"%s\",\"name\":\"%s\",\"country\":\"%s\",\"latitude\":%f,\"longitude\":%f}",
+            code, name, country, latitude, longitude
         );
     }
 }
